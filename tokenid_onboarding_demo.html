@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TokenID — Onboarding Demo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:        #0F1117;
+    --bg-2:      #161925;
+    --card:      #1E2540;
+    --card-2:    #252C4A;
+    --border:    #2A3050;
+    --border-2:  #3A4060;
+    --text:      #FFFFFF;
+    --text-2:    #A8ADC5;
+    --text-3:    #6E7490;
+    --orange:    #FE602C;
+    --teal:      #00BFA6;
+    --blue:      #378ADD;
+    --amber:     #EF9F27;
+    --red:       #E24B4A;
+    --green:     #1D9E75;
+    --purple:    #7F77DD;
+    --mono:      'SF Mono', 'Monaco', 'Consolas', monospace;
+    --sans:      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+    overflow: hidden;
+  }
+
+  /* ───── Layout ───── */
+  .app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  .browser-frame {
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .browser-dots { display: flex; gap: 6px; }
+  .browser-dots span {
+    width: 11px; height: 11px; border-radius: 50%;
+  }
+  .browser-dots span:nth-child(1) { background: #E24B4A; }
+  .browser-dots span:nth-child(2) { background: #EF9F27; }
+  .browser-dots span:nth-child(3) { background: #1D9E75; }
+  .browser-url {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: var(--text-2);
+    font-family: var(--mono);
+  }
+  .demo-controls { display: flex; gap: 6px; align-items: center; }
+  .demo-badge {
+    background: rgba(254, 96, 44, 0.15);
+    color: var(--orange);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .demo-btn {
+    background: transparent;
+    border: 1px solid var(--border-2);
+    color: var(--text-2);
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--sans);
+  }
+  .demo-btn:hover { background: var(--card); color: var(--text); }
+
+  .progress-rail {
+    display: flex;
+    align-items: center;
+    padding: 12px 32px;
+    gap: 8px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    overflow-x: auto;
+  }
+  .step-dot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .step-dot .circle {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--card);
+    border: 1px solid var(--border-2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 500; color: var(--text-3);
+    transition: all .2s;
+  }
+  .step-dot.active .circle { background: var(--orange); color: #fff; border-color: var(--orange); }
+  .step-dot.complete .circle { background: var(--green); color: #fff; border-color: var(--green); }
+  .step-dot .label {
+    font-size: 11px; color: var(--text-3); font-weight: 500;
+  }
+  .step-dot.active .label { color: var(--text); }
+  .step-dot.complete .label { color: var(--text-2); }
+  .step-sep { flex: 1; height: 1px; background: var(--border); min-width: 16px; }
+
+  .stage {
+    flex: 1;
+    overflow-y: auto;
+    padding: 40px 24px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+  .stage-inner { width: 100%; max-width: 900px; }
+
+  .hidden { display: none !important; }
+
+  /* ───── Hero / landing ───── */
+  .hero { text-align: center; padding: 20px 0; }
+  .hero-eyebrow {
+    display: inline-block;
+    background: rgba(254, 96, 44, 0.12);
+    color: var(--orange);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: 42px;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+  .hero h1 .accent { color: var(--orange); }
+  .hero-sub {
+    font-size: 17px;
+    color: var(--text-2);
+    max-width: 600px;
+    margin: 0 auto 32px;
+    line-height: 1.5;
+  }
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    max-width: 640px;
+    margin: 0 auto 32px;
+  }
+  .hero-stat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 12px;
+    text-align: left;
+  }
+  .hero-stat .n { font-size: 20px; font-weight: 600; margin-bottom: 2px; }
+  .hero-stat .l { font-size: 11px; color: var(--text-3); }
+
+  .cta-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    font-family: var(--sans);
+    transition: all .15s;
+  }
+  .btn-primary {
+    background: var(--orange);
+    color: #fff;
+  }
+  .btn-primary:hover { background: #ff7343; }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border-2);
+    color: var(--text);
+  }
+  .btn-ghost:hover { background: var(--card); }
+  .btn-green { background: var(--green); color: #fff; }
+  .btn-green:hover { background: #23b388; }
+  .cta-meta { font-size: 12px; color: var(--text-3); }
+
+  .logo-row {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .logo-row span {
+    font-size: 13px; color: var(--text-3); font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+
+  /* ───── Signup ───── */
+  .signup-card {
+    max-width: 460px;
+    margin: 0 auto;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+  }
+  .signup-card h2 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .signup-card .sub {
+    font-size: 13px;
+    color: var(--text-2);
+    margin-bottom: 24px;
+  }
+  .oauth-btn {
+    width: 100%;
+    padding: 11px;
+    border-radius: 8px;
+    background: #24292e;
+    color: #fff;
+    border: 1px solid #2a2f36;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .oauth-btn:hover { background: #2a2f36; }
+  .divider-or {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0;
+    color: var(--text-3);
+    font-size: 11px;
+  }
+  .divider-or::before, .divider-or::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+  .field-group { margin-bottom: 12px; }
+  .field-group label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-2);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .field-group input {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border-2);
+    border-radius: 7px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: var(--sans);
+  }
+  .field-group input:focus {
+    outline: none;
+    border-color: var(--orange);
+  }
+  .privacy-note {
+    font-size: 11px;
+    color: var(--text-3);
+    line-height: 1.5;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .privacy-note a { color: var(--teal); text-decoration: none; }
+
+  /* ───── Connect method ───── */
+  .connect-wrap { max-width: 680px; margin: 0 auto; }
+  .connect-wrap h2 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .connect-wrap .lead {
+    color: var(--text-2);
+    margin-bottom: 28px;
+  }
+  .option {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .option:hover { border-color: var(--border-2); background: var(--card-2); }
+  .option.recommended {
+    border-color: var(--green);
+    background: linear-gradient(to right, rgba(29, 158, 117, 0.08), transparent 30%);
+  }
+  .option-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .option-title {
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .option-badge {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-weight: 500;
+  }
+  .badge-green { background: rgba(29, 158, 117, 0.15); color: var(--green); }
+  .badge-amber { background: rgba(239, 159, 39, 0.15); color: var(--amber); }
+  .badge-purple { background: rgba(127, 119, 221, 0.15); color: var(--purple); }
+  .option-sub { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+  .option-chevron { color: var(--text-3); font-size: 18px; }
+
+  /* ───── SDK setup ───── */
+  .setup-wrap { max-width: 700px; margin: 0 auto; }
+  .setup-wrap h2 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .setup-wrap .lead {
+    color: var(--text-2);
+    margin-bottom: 20px;
+  }
+  .tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--card);
+    padding: 3px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    width: fit-content;
+    margin-bottom: 16px;
+  }
+  .tab {
+    padding: 6px 14px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-3);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    font-family: var(--sans);
+  }
+  .tab.active {
+    background: var(--card-2);
+    color: var(--text);
+  }
+  .code-block {
+    background: #0B0D12;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.8;
+    margin-bottom: 14px;
+    position: relative;
+    overflow-x: auto;
+  }
+  .code-block .copy-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--card);
+    border: 1px solid var(--border-2);
+    color: var(--text-3);
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--sans);
+  }
+  .code-comment { color: #6E7490; }
+  .code-key     { color: #F7C1C1; }
+  .code-str     { color: #FAC775; }
+  .code-fn      { color: #9FE1CB; }
+  .code-var     { color: #B5D4F4; }
+
+  .setup-step-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--orange);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
+    margin-top: 20px;
+  }
+  .setup-step-label:first-child { margin-top: 0; }
+
+  /* ───── Verification ───── */
+  .verify-wrap { max-width: 640px; margin: 0 auto; }
+  .verify-wrap h2 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+  .verify-status {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .status-indicator {
+    width: 10px; height: 10px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .indicator-pulse {
+    background: var(--amber);
+    animation: pulse 1.5s infinite ease-in-out;
+  }
+  .indicator-green { background: var(--green); }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 159, 39, 0.5); }
+    50% { box-shadow: 0 0 0 8px rgba(239, 159, 39, 0); }
+  }
+  .status-title { font-size: 14px; font-weight: 500; }
+  .status-sub { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+  .live-feed {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .live-feed-head {
+    padding: 12px 18px;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .live-feed-head span { font-size: 12px; font-weight: 500; color: var(--text-2); }
+  .live-feed-head .live {
+    font-size: 10px; color: var(--green); font-weight: 500;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .live-feed-head .live::before {
+    content: ''; width: 6px; height: 6px; background: var(--green); border-radius: 50%;
+    animation: pulse-green 1.5s infinite;
+  }
+  @keyframes pulse-green {
+    0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
+  }
+  .feed-row {
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 14px;
+    align-items: center;
+    font-size: 12px;
+    animation: slideIn 0.3s ease-out;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .feed-row:last-child { border-bottom: none; }
+  .feed-time { color: var(--text-3); font-family: var(--mono); font-size: 11px; }
+  .feed-model {
+    background: var(--bg);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-2);
+  }
+  .feed-tokens { color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .feed-cost { color: var(--amber); font-weight: 500; font-variant-numeric: tabular-nums; }
+
+  .email-preview {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 0 auto;
+    max-width: 620px;
+  }
+  .email-header {
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-2);
+  }
+  .email-from { font-size: 12px; color: var(--text-3); margin-bottom: 4px; }
+  .email-subject { font-size: 17px; font-weight: 600; }
+  .email-body { padding: 24px 22px; }
+  .email-hello { font-size: 14px; color: var(--text-2); margin-bottom: 18px; }
+  .email-big-num {
+    background: linear-gradient(135deg, rgba(226, 75, 74, 0.1), rgba(226, 75, 74, 0.02));
+    border: 1px solid rgba(226, 75, 74, 0.3);
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .email-big-num .n {
+    font-size: 38px;
+    font-weight: 600;
+    color: var(--red);
+    line-height: 1.1;
+  }
+  .email-big-num .l {
+    font-size: 12px;
+    color: var(--text-2);
+    margin-top: 4px;
+  }
+  .email-finding-list { margin-bottom: 20px; }
+  .email-finding {
+    display: grid;
+    grid-template-columns: 6px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .email-finding:last-child { border-bottom: none; }
+  .ef-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .ef-title { font-size: 13px; }
+  .ef-val { font-size: 13px; font-weight: 500; }
+
+  /* ───── CTO Dashboard ───── */
+  .dashboard {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    height: 100%;
+    background: var(--bg-2);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .sidebar {
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    padding: 20px 12px;
+  }
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 0 8px;
+  }
+  .sidebar-logo .mark {
+    width: 22px; height: 22px;
+    background: var(--orange);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 11px;
+  }
+  .sidebar-logo .name { font-weight: 600; font-size: 14px; }
+  .sidebar-section {
+    font-size: 10px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 8px;
+    margin-top: 12px;
+  }
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text-2);
+    cursor: pointer;
+    margin-bottom: 1px;
+  }
+  .sidebar-item:hover { background: var(--card); }
+  .sidebar-item.active { background: var(--card); color: var(--text); }
+  .sidebar-item .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--border-2);
+    flex-shrink: 0;
+  }
+  .sidebar-item.active .dot { background: var(--orange); }
+  .sidebar-badge {
+    margin-left: auto;
+    font-size: 10px;
+    background: rgba(226, 75, 74, 0.18);
+    color: var(--red);
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-weight: 500;
+  }
+
+  .dashboard-main {
+    padding: 24px 28px;
+    overflow-y: auto;
+  }
+  .dashboard-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .dashboard-head h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  .dashboard-head .sub { font-size: 12px; color: var(--text-3); }
+  .dashboard-head .actions { display: flex; gap: 8px; }
+
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .kpi {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .kpi-label {
+    font-size: 11px; color: var(--text-3);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .kpi-value { font-size: 22px; font-weight: 600; line-height: 1.2; margin-bottom: 4px; }
+  .kpi-delta { font-size: 11px; font-weight: 500; }
+  .kpi-delta.up { color: var(--red); }
+  .kpi-delta.down { color: var(--green); }
+  .kpi-sub { font-size: 11px; color: var(--text-3); }
+
+  .panel-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .panel h3 {
+    font-size: 13px; font-weight: 600;
+    margin-bottom: 12px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .panel h3 .view-all { font-size: 11px; color: var(--teal); font-weight: 400; cursor: pointer; }
+
+  .driver-row {
+    display: grid;
+    grid-template-columns: 20px 1fr 100px 70px;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .driver-row:last-child { border-bottom: none; }
+  .driver-rank {
+    color: var(--text-3);
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .driver-name { font-weight: 500; }
+  .driver-owner { font-size: 11px; color: var(--text-3); }
+  .driver-bar {
+    height: 4px; background: var(--bg); border-radius: 2px; overflow: hidden;
+  }
+  .driver-bar .fill { height: 100%; background: var(--orange); border-radius: 2px; }
+  .driver-cost {
+    text-align: right;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .violation-row {
+    display: grid;
+    grid-template-columns: 8px 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .violation-row:last-child { border-bottom: none; }
+  .v-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .v-title { font-size: 12px; font-weight: 500; margin-bottom: 2px; }
+  .v-sub { font-size: 11px; color: var(--text-3); }
+  .v-cost { font-size: 12px; font-weight: 500; }
+
+  .claim-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 8px;
+    align-items: center;
+  }
+  .claim-row:last-child { border-bottom: none; }
+  .claim-title { font-size: 12px; font-weight: 500; }
+  .claim-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+  .claim-status {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .status-filed { background: rgba(55, 138, 221, 0.15); color: var(--blue); }
+  .status-won   { background: rgba(29, 158, 117, 0.15); color: var(--green); }
+  .status-pending { background: rgba(239, 159, 39, 0.15); color: var(--amber); }
+
+  /* ───── Footer nav ───── */
+  .stage-nav {
+    padding: 16px 32px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .stage-nav .context {
+    font-size: 12px;
+    color: var(--text-3);
+  }
+  .stage-nav .context strong { color: var(--text); font-weight: 600; }
+
+  @media (max-width: 780px) {
+    .hero-stats { grid-template-columns: repeat(2, 1fr); }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .panel-grid { grid-template-columns: 1fr; }
+    .dashboard { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Browser frame -->
+  <div class="browser-frame">
+    <div class="browser-dots"><span></span><span></span><span></span></div>
+    <div class="browser-url" id="url-bar">tokenid.vaudit.com</div>
+    <div class="demo-controls">
+      <span class="demo-badge">Demo</span>
+      <button class="demo-btn" onclick="reset()">↺ Restart</button>
+    </div>
+  </div>
+
+  <!-- Progress rail -->
+  <div class="progress-rail" id="progress-rail">
+    <div class="step-dot" data-step="1" onclick="goTo(1)"><div class="circle">1</div><div class="label">Landing</div></div>
+    <div class="step-sep"></div>
+    <div class="step-dot" data-step="2" onclick="goTo(2)"><div class="circle">2</div><div class="label">Sign up</div></div>
+    <div class="step-sep"></div>
+    <div class="step-dot" data-step="3" onclick="goTo(3)"><div class="circle">3</div><div class="label">Connect</div></div>
+    <div class="step-sep"></div>
+    <div class="step-dot" data-step="4" onclick="goTo(4)"><div class="circle">4</div><div class="label">Install</div></div>
+    <div class="step-sep"></div>
+    <div class="step-dot" data-step="5" onclick="goTo(5)"><div class="circle">5</div><div class="label">Verify</div></div>
+    <div class="step-sep"></div>
+    <div class="step-dot" data-step="6" onclick="goTo(6)"><div class="circle">6</div><div class="label">24hr email</div></div>
+    <div class="step-sep"></div>
+    <div class="step-dot" data-step="7" onclick="goTo(7)"><div class="circle">7</div><div class="label">CTO dashboard</div></div>
+  </div>
+
+  <!-- Stage -->
+  <div class="stage">
+    <div class="stage-inner">
+
+      <!-- Step 1: Landing -->
+      <div class="screen" data-screen="1">
+        <div class="hero">
+          <div class="hero-eyebrow">LLM spend audit</div>
+          <h1>Your AI bill grew <span class="accent">60%</span> last quarter.<br>Do you know why?</h1>
+          <p class="hero-sub">TokenID finds the 25–35% of enterprise LLM spend that's waste — system prompt overhead, ghost seats, billing errors, agent loops. Set up in 5 minutes.</p>
+
+          <div class="hero-stats">
+            <div class="hero-stat"><div class="n" style="color:#7F77DD">$47K</div><div class="l">avg waste found</div></div>
+            <div class="hero-stat"><div class="n" style="color:#1D9E75">24hr</div><div class="l">to first finding</div></div>
+            <div class="hero-stat"><div class="n" style="color:#378ADD">5 min</div><div class="l">to connect</div></div>
+            <div class="hero-stat"><div class="n" style="color:#EF9F27">0</div><div class="l">prompt content stored</div></div>
+          </div>
+
+          <div class="cta-group">
+            <button class="btn btn-primary" onclick="goTo(2)">See your waste — free audit →</button>
+            <button class="btn btn-ghost" onclick="goTo(7)">View sample report</button>
+          </div>
+          <div class="cta-meta">No credit card · No sales call · Read-only API access</div>
+
+          <div class="logo-row">
+            <span>Anthropic</span>
+            <span>OpenAI</span>
+            <span>Azure OpenAI</span>
+            <span>Cursor</span>
+            <span>GitHub Copilot</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Signup -->
+      <div class="screen hidden" data-screen="2">
+        <div class="signup-card">
+          <h2>Start your audit</h2>
+          <p class="sub">Takes 30 seconds. We'll show you findings on demo data first.</p>
+
+          <button class="oauth-btn" onclick="next()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.21 11.38.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.04-3.34.73-4.04-1.61-4.04-1.61-.55-1.38-1.33-1.75-1.33-1.75-1.09-.74.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5 1 .11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 016 0c2.28-1.55 3.29-1.23 3.29-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.89-.01 3.29 0 .32.22.7.83.58C20.57 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+            Continue with GitHub
+          </button>
+
+          <div class="divider-or">OR</div>
+
+          <div class="field-group">
+            <label>Work email</label>
+            <input type="email" value="sarah@acmecorp.com" readonly>
+          </div>
+          <div class="field-group">
+            <label>Company</label>
+            <input type="text" value="Acme Corp" readonly>
+          </div>
+          <div class="field-group">
+            <label>Your role</label>
+            <input type="text" value="CTO" readonly>
+          </div>
+
+          <button class="btn btn-primary" style="width:100%; margin-top: 8px;" onclick="next()">Create free account →</button>
+
+          <div class="privacy-note">
+            We only read usage metadata — tokens, costs, latency. Zero prompt content ever stored. <a href="#">Read our privacy policy →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Connect method -->
+      <div class="screen hidden" data-screen="3">
+        <div class="connect-wrap">
+          <h2>How do you want to connect?</h2>
+          <p class="lead">All three options are metadata-only. You can upgrade later. Most CTOs start with the API key and upgrade to SDK once they see findings.</p>
+
+          <div class="option recommended" onclick="next()">
+            <div class="option-head">
+              <div class="option-title">
+                🔑 Read-only API key
+                <span class="option-badge badge-green">Recommended · 2 min</span>
+              </div>
+              <div class="option-chevron">→</div>
+            </div>
+            <div class="option-sub">Paste your Anthropic or OpenAI API key. We pull usage data directly. No code changes. Good for first pass.</div>
+          </div>
+
+          <div class="option" onclick="next()">
+            <div class="option-head">
+              <div class="option-title">
+                ⚡ SDK wrapper
+                <span class="option-badge badge-amber">15 min · Deepest data</span>
+              </div>
+              <div class="option-chevron">→</div>
+            </div>
+            <div class="option-sub">pip install vaudit · One init line. Call-level breakdown, agent loop detection, per-feature cost attribution.</div>
+          </div>
+
+          <div class="option" onclick="next()">
+            <div class="option-head">
+              <div class="option-title">
+                🌐 HTTP proxy
+                <span class="option-badge badge-purple">5 min · All languages</span>
+              </div>
+              <div class="option-chevron">→</div>
+            </div>
+            <div class="option-sub">Point ANTHROPIC_BASE_URL at our collector. Works across every SDK and language. Zero code changes.</div>
+          </div>
+
+          <div style="margin-top: 20px; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; font-size: 12px; color: var(--text-2);">
+            <strong style="color: var(--teal);">✓ Self-hostable</strong> — all collectors are open source (Apache 2.0). Run our collector in your own VPC if you prefer. <a href="#" style="color: var(--teal);">See on GitHub →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: SDK install -->
+      <div class="screen hidden" data-screen="4">
+        <div class="setup-wrap">
+          <h2>Install the SDK</h2>
+          <p class="lead">Two lines. That's it. Works alongside your existing code.</p>
+
+          <div class="tabs">
+            <button class="tab active">Python</button>
+            <button class="tab">Node.js</button>
+            <button class="tab">Go</button>
+          </div>
+
+          <div class="setup-step-label">Step 1 · Install</div>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <span class="code-comment"># one-time install</span><br>
+            pip install vaudit
+          </div>
+
+          <div class="setup-step-label">Step 2 · Initialize in your app</div>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <span class="code-fn">import</span> vaudit<br>
+            <span class="code-fn">import</span> anthropic<br>
+            <br>
+            <span class="code-comment"># add this once at app startup</span><br>
+            vaudit.<span class="code-fn">init</span>(api_key=<span class="code-str">"vaudit_sk_live_a8f2..."</span>)<br>
+            <br>
+            <span class="code-comment"># your code stays exactly the same</span><br>
+            client = anthropic.<span class="code-fn">Anthropic</span>()<br>
+            response = client.messages.<span class="code-fn">create</span>(...)
+          </div>
+
+          <div class="setup-step-label">Optional · Label calls by feature</div>
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+            <span class="code-comment"># adds per-feature cost attribution to the dashboard</span><br>
+            vaudit.<span class="code-fn">set_caller</span>(<span class="code-str">"report_generator"</span>)
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-top: 24px;">
+            <button class="btn btn-green" onclick="next()">I've added this — verify connection →</button>
+            <button class="btn btn-ghost" onclick="next()">Skip to demo data</button>
+          </div>
+
+          <div style="margin-top: 16px; font-size: 11px; color: var(--text-3);">
+            Uninstall any time: remove the init line. No orphaned data, no webhook cleanup.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5: Verify (live) -->
+      <div class="screen hidden" data-screen="5">
+        <div class="verify-wrap">
+          <h2>Waiting for your first call...</h2>
+
+          <div class="verify-status">
+            <div class="status-indicator" id="status-indicator"></div>
+            <div>
+              <div class="status-title" id="status-title">Listening on your API key</div>
+              <div class="status-sub" id="status-sub">Make any API call in your app — we'll detect it automatically.</div>
+            </div>
+          </div>
+
+          <div class="live-feed">
+            <div class="live-feed-head">
+              <span>Live API calls</span>
+              <span class="live" id="live-indicator" style="display: none;">Live</span>
+            </div>
+            <div id="feed-body">
+              <div style="padding: 28px; text-align: center; color: var(--text-3); font-size: 12px;">
+                No calls received yet. Waiting...
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 24px; display: flex; gap: 10px; justify-content: center;">
+            <button class="btn btn-primary hidden" id="to-email-btn" onclick="next()">Continue to your first report →</button>
+            <button class="btn btn-ghost" id="trigger-call-btn" onclick="triggerFirstCall()">Simulate first API call (demo)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 6: 24hr email -->
+      <div class="screen hidden" data-screen="6">
+        <div class="email-preview">
+          <div class="email-header">
+            <div class="email-from">From: TokenID &lt;audit@vaudit.com&gt; · to: sarah@acmecorp.com</div>
+            <div class="email-subject">We found $31,200 in your first 24 hours</div>
+          </div>
+          <div class="email-body">
+            <p class="email-hello">Hi Sarah — here's what we found after analyzing 24 hours of your Anthropic and OpenAI API usage:</p>
+
+            <div class="email-big-num">
+              <div class="n">$31,200</div>
+              <div class="l">projected annual waste · based on 24hr sample</div>
+            </div>
+
+            <div class="email-finding-list">
+              <div class="email-finding">
+                <div class="ef-dot" style="background: var(--amber);"></div>
+                <div>
+                  <div class="ef-title">System prompt overhead</div>
+                  <div style="font-size:11px; color: var(--text-3);">44% of input tokens are repeated system prompts</div>
+                </div>
+                <div class="ef-val" style="color: var(--amber);">$13,400</div>
+              </div>
+              <div class="email-finding">
+                <div class="ef-dot" style="background: var(--purple);"></div>
+                <div>
+                  <div class="ef-title">Model misrouting</div>
+                  <div style="font-size:11px; color: var(--text-3);">28% of Sonnet calls would suffice on Haiku</div>
+                </div>
+                <div class="ef-val" style="color: var(--purple);">$9,100</div>
+              </div>
+              <div class="email-finding">
+                <div class="ef-dot" style="background: var(--green);"></div>
+                <div>
+                  <div class="ef-title">Cache opportunity</div>
+                  <div style="font-size:11px; color: var(--text-3);">3 system prompts eligible for prompt caching</div>
+                </div>
+                <div class="ef-val" style="color: var(--green);">$6,800</div>
+              </div>
+              <div class="email-finding">
+                <div class="ef-dot" style="background: var(--blue);"></div>
+                <div>
+                  <div class="ef-title">Failed call cost</div>
+                  <div style="font-size:11px; color: var(--text-3);">2.3% error rate · input tokens still billed</div>
+                </div>
+                <div class="ef-val" style="color: var(--blue);">$1,700</div>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%;" onclick="next()">See full report + share with finance →</button>
+
+            <p style="font-size: 11px; color: var(--text-3); margin-top: 18px; text-align: center;">
+              Reply to this email to talk to a Vaudit specialist · Unsubscribe
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 7: CTO Dashboard -->
+      <div class="screen hidden" data-screen="7" style="width: 100%; max-width: 100%;">
+        <div style="height: 560px;">
+          <div class="dashboard">
+            <div class="sidebar">
+              <div class="sidebar-logo">
+                <div class="mark">V</div>
+                <div class="name">TokenID</div>
+              </div>
+              <div class="sidebar-item active"><div class="dot"></div>Dashboard</div>
+              <div class="sidebar-item"><div class="dot"></div>Violations <span class="sidebar-badge">12</span></div>
+              <div class="sidebar-item"><div class="dot"></div>Credit claims</div>
+              <div class="sidebar-item"><div class="dot"></div>Spend by project</div>
+              <div class="sidebar-section">Team</div>
+              <div class="sidebar-item"><div class="dot"></div>Engineering view</div>
+              <div class="sidebar-item"><div class="dot"></div>Finance view</div>
+              <div class="sidebar-section">Setup</div>
+              <div class="sidebar-item"><div class="dot"></div>Connections</div>
+              <div class="sidebar-item"><div class="dot"></div>Settings</div>
+            </div>
+
+            <div class="dashboard-main">
+              <div class="dashboard-head">
+                <div>
+                  <h1>Good morning, Sarah</h1>
+                  <div class="sub">CTO view · Acme Corp · last updated 2 min ago</div>
+                </div>
+                <div class="actions">
+                  <button class="btn btn-ghost" style="padding: 7px 12px; font-size: 12px;">Export PDF</button>
+                  <button class="btn btn-primary" style="padding: 7px 12px; font-size: 12px;">Share with CFO →</button>
+                </div>
+              </div>
+
+              <div class="kpi-grid">
+                <div class="kpi">
+                  <div class="kpi-label">AI spend this month</div>
+                  <div class="kpi-value">$142,840</div>
+                  <div class="kpi-delta up">↑ 23% vs last month</div>
+                </div>
+                <div class="kpi">
+                  <div class="kpi-label">Detected waste</div>
+                  <div class="kpi-value" style="color: var(--amber);">$38,100</div>
+                  <div class="kpi-sub">27% of total spend</div>
+                </div>
+                <div class="kpi">
+                  <div class="kpi-label">Credits recovered</div>
+                  <div class="kpi-value" style="color: var(--green);">$12,340</div>
+                  <div class="kpi-delta down">↑ 3 claims this quarter</div>
+                </div>
+                <div class="kpi">
+                  <div class="kpi-label">Open violations</div>
+                  <div class="kpi-value" style="color: var(--red);">12</div>
+                  <div class="kpi-sub">$22,600 at risk</div>
+                </div>
+              </div>
+
+              <div class="panel-grid">
+                <div class="panel">
+                  <h3>Top 3 cost drivers <span class="view-all">View all →</span></h3>
+                  <div class="driver-row">
+                    <div class="driver-rank">01</div>
+                    <div>
+                      <div class="driver-name">report_generator</div>
+                      <div class="driver-owner">owner: Raj · eng team</div>
+                    </div>
+                    <div class="driver-bar"><div class="fill" style="width: 85%;"></div></div>
+                    <div class="driver-cost">$24,100</div>
+                  </div>
+                  <div class="driver-row">
+                    <div class="driver-rank">02</div>
+                    <div>
+                      <div class="driver-name">customer_support_bot</div>
+                      <div class="driver-owner">owner: Mei · product team</div>
+                    </div>
+                    <div class="driver-bar"><div class="fill" style="width: 58%;"></div></div>
+                    <div class="driver-cost">$16,400</div>
+                  </div>
+                  <div class="driver-row">
+                    <div class="driver-rank">03</div>
+                    <div>
+                      <div class="driver-name">agent_orchestrator</div>
+                      <div class="driver-owner">owner: Dan · platform team</div>
+                    </div>
+                    <div class="driver-bar"><div class="fill" style="width: 42%;"></div></div>
+                    <div class="driver-cost">$11,900</div>
+                  </div>
+                </div>
+
+                <div class="panel">
+                  <h3>Open credit claims</h3>
+                  <div class="claim-row">
+                    <div>
+                      <div class="claim-title">Anthropic · SLA breach</div>
+                      <div class="claim-sub">Mar 18 · 47min outage</div>
+                    </div>
+                    <span class="claim-status status-filed">Filed</span>
+                  </div>
+                  <div class="claim-row">
+                    <div>
+                      <div class="claim-title">OpenAI · duplicate billing</div>
+                      <div class="claim-sub">Feb 24 · $3,210</div>
+                    </div>
+                    <span class="claim-status status-won">Won</span>
+                  </div>
+                  <div class="claim-row">
+                    <div>
+                      <div class="claim-title">Azure · PTU overage</div>
+                      <div class="claim-sub">Under review</div>
+                    </div>
+                    <span class="claim-status status-pending">Pending</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel" style="margin-bottom: 20px;">
+                <h3>Active violations <span class="view-all">All 12 →</span></h3>
+                <div class="violation-row">
+                  <div class="v-dot" style="background: var(--red);"></div>
+                  <div>
+                    <div class="v-title">Agent loop detected in order_resolver</div>
+                    <div class="v-sub">Ran 14 iterations · expected 3 · last 6 hrs</div>
+                  </div>
+                  <div class="v-cost" style="color: var(--red);">-$847</div>
+                </div>
+                <div class="violation-row">
+                  <div class="v-dot" style="background: var(--amber);"></div>
+                  <div>
+                    <div class="v-title">System prompt bloat · customer_support_bot</div>
+                    <div class="v-sub">1,840 tokens · 62% could be compressed</div>
+                  </div>
+                  <div class="v-cost" style="color: var(--amber);">-$412/day</div>
+                </div>
+                <div class="violation-row">
+                  <div class="v-dot" style="background: var(--amber);"></div>
+                  <div>
+                    <div class="v-title">Model misrouting · summary_generator</div>
+                    <div class="v-sub">83% of calls use Sonnet · should be Haiku</div>
+                  </div>
+                  <div class="v-cost" style="color: var(--amber);">-$290/day</div>
+                </div>
+                <div class="violation-row">
+                  <div class="v-dot" style="background: var(--blue);"></div>
+                  <div>
+                    <div class="v-title">Retry storm · webhook_handler</div>
+                    <div class="v-sub">148 failed calls retried · 11pm–3am</div>
+                  </div>
+                  <div class="v-cost" style="color: var(--blue);">-$186</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer nav -->
+  <div class="stage-nav">
+    <div class="context" id="context-text"><strong>Stage 1 — acquisition</strong> · What a CTO sees when they land on the site</div>
+    <div style="display: flex; gap: 8px;">
+      <button class="btn btn-ghost" style="padding: 7px 14px; font-size: 12px;" onclick="prev()">← Back</button>
+      <button class="btn btn-primary" style="padding: 7px 14px; font-size: 12px;" onclick="next()">Next →</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let step = 1;
+  const totalSteps = 7;
+
+  const urls = {
+    1: 'tokenid.vaudit.com',
+    2: 'tokenid.vaudit.com/signup',
+    3: 'tokenid.vaudit.com/connect',
+    4: 'tokenid.vaudit.com/connect/sdk',
+    5: 'tokenid.vaudit.com/connect/verify',
+    6: 'mail.google.com — inbox',
+    7: 'app.tokenid.vaudit.com/dashboard'
+  };
+
+  const contexts = {
+    1: '<strong>Stage 1 — acquisition</strong> · CTO lands from cold email / search · hook is the dollar number, not features',
+    2: '<strong>Stage 1 — acquisition</strong> · No credit card, no sales call · GitHub login signals technical credibility',
+    3: '<strong>Stage 2 — setup</strong> · Three friction levels · most CTOs start with API key and upgrade to SDK',
+    4: '<strong>Stage 2 — setup</strong> · Engineer does this part · ≤15 min · code-first, no wizard',
+    5: '<strong>Stage 2 — setup</strong> · Real-time confirmation kills install doubt · first call visible immediately',
+    6: '<strong>Stage 3 — aha moment</strong> · The email IS the conversion · subject line is the finding, not a feature',
+    7: '<strong>Stage 3 — aha moment</strong> · CTO-specific view · middle ground between eng-granular and finance-abstract'
+  };
+
+  function render() {
+    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+    document.querySelector(`[data-screen="${step}"]`).classList.remove('hidden');
+
+    document.querySelectorAll('.step-dot').forEach(d => {
+      const n = parseInt(d.dataset.step);
+      d.classList.remove('active', 'complete');
+      if (n < step) d.classList.add('complete');
+      if (n === step) d.classList.add('active');
+    });
+
+    document.getElementById('url-bar').textContent = urls[step];
+    document.getElementById('context-text').innerHTML = contexts[step];
+
+    // Reset verify step if needed
+    if (step === 5) {
+      resetVerify();
+    }
+  }
+
+  function next() {
+    if (step < totalSteps) { step++; render(); }
+  }
+  function prev() {
+    if (step > 1) { step--; render(); }
+  }
+  function goTo(n) {
+    step = n; render();
+  }
+  function reset() {
+    step = 1; render();
+  }
+
+  // Verify screen simulation
+  let feedCalls = [];
+  function resetVerify() {
+    feedCalls = [];
+    document.getElementById('feed-body').innerHTML = '<div style="padding: 28px; text-align: center; color: var(--text-3); font-size: 12px;">No calls received yet. Waiting...</div>';
+    document.getElementById('status-indicator').className = 'status-indicator indicator-pulse';
+    document.getElementById('status-title').textContent = 'Listening on your API key';
+    document.getElementById('status-sub').textContent = "Make any API call in your app — we'll detect it automatically.";
+    document.getElementById('live-indicator').style.display = 'none';
+    document.getElementById('to-email-btn').classList.add('hidden');
+    document.getElementById('trigger-call-btn').classList.remove('hidden');
+  }
+
+  function triggerFirstCall() {
+    document.getElementById('status-indicator').className = 'status-indicator indicator-green';
+    document.getElementById('status-title').textContent = 'Connected ✓';
+    document.getElementById('status-sub').textContent = 'Collecting your first 24 hours. We will email you when findings are ready.';
+    document.getElementById('live-indicator').style.display = 'flex';
+    document.getElementById('trigger-call-btn').classList.add('hidden');
+
+    const feed = document.getElementById('feed-body');
+    feed.innerHTML = '';
+
+    const calls = [
+      { time: '14:32:08', model: 'claude-sonnet-4-5', tokens: '847', cost: '$0.0041' },
+      { time: '14:32:11', model: 'claude-sonnet-4-5', tokens: '1,204', cost: '$0.0058' },
+      { time: '14:32:14', model: 'gpt-4o-mini', tokens: '392', cost: '$0.0003' },
+      { time: '14:32:18', model: 'claude-sonnet-4-5', tokens: '2,187', cost: '$0.0098' },
+      { time: '14:32:22', model: 'claude-haiku', tokens: '514', cost: '$0.0004' },
+    ];
+
+    calls.forEach((c, i) => {
+      setTimeout(() => {
+        const row = document.createElement('div');
+        row.className = 'feed-row';
+        row.innerHTML = `
+          <div class="feed-time">${c.time}</div>
+          <div class="feed-model">${c.model}</div>
+          <div class="feed-tokens">${c.tokens} tokens</div>
+          <div class="feed-cost">${c.cost}</div>
+        `;
+        feed.insertBefore(row, feed.firstChild);
+
+        if (i === 2) {
+          document.getElementById('to-email-btn').classList.remove('hidden');
+        }
+      }, i * 600);
+    });
+  }
+
+  render();
+</script>
+
+</body>
+</html>
